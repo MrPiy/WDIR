@@ -10,10 +10,12 @@
 			public $password;
 			public $filterArray;
 			public $filterExtensionArray;
+			public $protection;
 			public function __construct(){
 				if(!isset($_SESSION)){
 					session_start();
 				}
+				$this->protection=['./index.php','./dir.php','./to.php','./index.html','./dir.html','./db'];
 				$this->filterArray=['.','..'];
 				$this->filterExtensionArray=['php'];
 				$this->password='admin';
@@ -22,6 +24,10 @@
 				$this->currentPath=$this->path($this->currentPathArray);
 			}
 			//-----------------------//
+			public function is_protection($dir){
+				$path=$this->currentPath.'/'.$dir;
+				return in_array($path,$this->protection);
+			}
 			public function login(){
 				$password=isset($_GET['password'])?$_GET['password']:'';
 				if($password==$this->password){
@@ -69,6 +75,7 @@
 			public function setPath($path){// 设置path 点击下一目录文件
 				$path=trim($path);//防止跳到前一目錄
 				$path=str_replace('/','', $path);
+				$path=str_replace('/./','/', $path);
 				if($path=='..'){
 					$path='.';
 				}
@@ -339,13 +346,25 @@
 					$re=$this->file_upload();
 					$this->json($re);
 				}elseif(isset($_GET['cpath'])){
-					$re=$this->create_path($_GET['cpath']);
+					if($this->is_protection($_GET['cpath'])){
+						$re['status']=false;
+					}else{
+						$re=$this->create_path($_GET['cpath']);
+					}
 					$this->json($re);
 				}elseif(isset($_GET['dfile'])){
-					$re=$this->delete_file($_GET['dfile']);
+					if($this->is_protection($_GET['dfile'])){
+						$re['status']=false;
+					}else{
+						$re=$this->delete_file($_GET['dfile']);
+					}
 					$this->json($re);
 				}elseif(isset($_GET['dpath'])){
-					$re=$this->delete_path($_GET['dpath']);
+					if($this->is_protection($_GET['dpath'])){
+						$re['status']=false;
+					}else{
+						$re=$this->delete_path($_GET['dpath']);
+					}
 					$this->json($re);
 				}else{
 					if($setKeyPath||$setPath){
