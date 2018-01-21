@@ -114,12 +114,16 @@
                 return $key;
             }
         }
-        public function file($file){
+        public function file($file,$get){
             //传入session的file $_SESSION['file'];
             $where['file']=$file;
             $info=$this->medoo->select('share','*',$where);
             if($info){
-                return $info[0]['file'];
+                if($info[0]['file']==$get){
+                    return true;
+                }else{
+                    return false;
+                }
             }else{
                 return false;
             }
